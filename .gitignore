@@ -99,6 +99,7 @@ StyleCopReport.xml
 *.scc
 
 Microservices.Ek.Query.Consumer/appsettings.json
+Microservices.Ek.Query.Consumer/appsettings.Development.json
 # Chutzpah Test files
 _Chutzpah*
 
