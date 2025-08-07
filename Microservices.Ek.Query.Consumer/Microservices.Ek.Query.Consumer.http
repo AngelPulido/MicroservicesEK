@@ -1,0 +1,6 @@
+@Microservices.Ek.Query.Consumer_HostAddress = http://localhost:5243
+
+GET {{Microservices.Ek.Query.Consumer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
