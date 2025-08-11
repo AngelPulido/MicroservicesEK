@@ -1,63 +1,136 @@
 ﻿using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EmailSent;
+using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EventEnvelope;
+using EK.Microservices.Cqrs.Core.Events;
+using EK.Microservices.Cqrs.Core.Producers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Dynamic;
+using System.Net;
+using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace Microservices.EK.Command.Api.Controllers
 {
     [ApiController]
-    [Route("kontrol/microservices/endpoint/v1")]
-    public class MicroservicesEKOperationsController : ControllerBase
+    public class MicroservicesEKOperationsController : BaseKontrollerOpen
     {
+        private readonly IEventProducer _eventProducer;
         private IMediator _mediator;
 
-        public MicroservicesEKOperationsController(IMediator mediator)
+        public MicroservicesEKOperationsController(IEventProducer eventProducer, IMediator mediator)
         {
+            _eventProducer = eventProducer;
             _mediator = mediator;
         }
 
-        //[HttpPost("EmailSent", Name ="EmailSent")]
-        //[ProducesResponseType((int) HttpStatusCode.OK)]
-        //public async Task<ActionResult> EmailSent([FromBody]EmailSentCommand command)
-        //{
-        //    var id = Guid.NewGuid().ToString();
-        //    command.Id = id;
-
-
-        //    bool enviado = await _mediator.Send(command);
-
-        //    // Envuelve el resultado en un objeto con la propiedad 'data':
-        //    return Ok(new { data = enviado });
-        //}
-        [HttpPost("EmailSent", Name = "EmailSent")]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
-        public async Task<ActionResult> EmailSent([FromBody] EmailSentWrapperDto wrapper)
+        [Route("API/KAFKA/endpoint/v1")]
+        [HttpPost]
+        public async Task<ActionResult> KafkaEndPoint([FromBody] EventEnvelopeWrapperDto wrapper)
         {
-            // 1) Valida la estructura
-            if (wrapper?.Item?.Data == null)
+            if (wrapper == null || wrapper.Item == null)
                 return BadRequest(new { error = "Payload inválido" });
 
-            var dto = wrapper.Item.Data;
+            var dto = wrapper.Item;
+            
+            JObject jsonData = ConvertToJObject(dto.Data);
 
-            // 2) Mapea al comando fuerte
-            var command = new EmailSentCommand
+            var eventEnvelope = MapToEventEnvelope(dto);
+
+            string kafkaTopic = BuildKafkaTopic(dto.Topic);
+
+
+            string topicName = dto.Topic ?? string.Empty;
+            string[] topicParts = topicName.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            dynamic _retValue = new ExpandoObject();
+
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                To = dto.To,
-                Subject = dto.Subject,
-                Body = dto.Body,
-                NameFile = dto.NameFile,
-                Base64Content = dto.Base64Content
-            };
+                var retValue = "";
+                dynamic resultado = new ExpandoObject();
 
-            // 3) Dispara tu pipeline CQRS/ES
-            bool enviado = await _mediator.Send(command);
+                switch (topicParts[0])
+                {
+                    case "notificacion":
+                        ProduceEvent(kafkaTopic, eventEnvelope);
+                        resultado = await HandleNotificacion(topicParts[1], jsonData);
+                        retValue = JsonConvert.SerializeObject(resultado);
+                        break;
+                    case "correo":
+                        ProduceEvent(kafkaTopic, eventEnvelope);
+                        break;
+                    case "actualizacion":
+                        ProduceEvent(kafkaTopic, eventEnvelope);
+                        break;
+                    case "sql":
+                        ProduceEvent(kafkaTopic, eventEnvelope);
+                        break;
+                    default:
+                        
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
 
-            return Ok(new { data = enviado });
+                throw;
+            }
+            return Ok();
         }
+
+        private async Task<ExpandoObject> HandleNotificacion(string comando, JObject json_datos)
+        {
+            dynamic resultado = new ExpandoObject();
+
+            switch(comando)
+            {
+                case "autorizacion":
+                    break;
+                default:
+                    break;
+            }
+            return resultado;
+        }
+
+
+        private void ProduceEvent(string kafkaTopic, object eventEnvelope)
+        {
+            _eventProducer.Produce(kafkaTopic, eventEnvelope);
+
+        }
+
+        private string BuildKafkaTopic(string topic)
+        {
+            return (topic ?? string.Empty).Trim('/').Replace("/", ".");
+        }
+
+        private object MapToEventEnvelope(EventEnvelopeCommand dto)
+        {
+            return new EventEnvelope(
+                id: string.IsNullOrEmpty(dto.Id) ? Guid.NewGuid().ToString() : dto.Id,
+                topic: dto.Topic,
+                timestamp: dto.Timestamp == default ? DateTime.UtcNow : dto.Timestamp,
+                data: dto.Data
+            );
+        }
+
+        private JObject ConvertToJObject(object data)
+        {
+            if (data == null)
+                return new JObject();
+
+            if (data is JsonElement jsonElement)
+                return JObject.Parse(jsonElement.GetRawText());
+
+            if (data is JObject jObject)
+                return jObject;
+
+            return JObject.FromObject(data);
+        }
+
+
     }
-
-
 }

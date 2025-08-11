@@ -16,7 +16,25 @@ namespace EK.Microservices.Command.Infrastructure.KafkaEvents
             _kafkaSettings = kafkaSettings.Value;
         }
 
-        public void Produce(string topic, BaseEvent @event)
+        //public void Produce(string topic, BaseEvent @event)
+        //{
+        //    var config = new ProducerConfig
+        //    {
+        //        BootstrapServers = $"{_kafkaSettings.Hostname}:{_kafkaSettings.Port}"
+        //    };
+
+        //    using (var producer = new ProducerBuilder<Null, string>(config).Build())
+        //    {
+        //        var classEvent = @event.GetType();
+        //        string value = JsonConvert.SerializeObject(@event);
+        //        var message = new Confluent.Kafka.Message<Null, string> { Value = value };
+
+        //        producer.ProduceAsync(topic, message).GetAwaiter().GetResult();
+        //    }
+            
+        //}
+
+        public void Produce<T>(string topic, T @event)
         {
             var config = new ProducerConfig
             {
@@ -25,13 +43,11 @@ namespace EK.Microservices.Command.Infrastructure.KafkaEvents
 
             using (var producer = new ProducerBuilder<Null, string>(config).Build())
             {
-                var classEvent = @event.GetType();
                 string value = JsonConvert.SerializeObject(@event);
-                var message = new Confluent.Kafka.Message<Null, string> { Value = value };
+                var message = new Message<Null, string> { Value = value };
 
                 producer.ProduceAsync(topic, message).GetAwaiter().GetResult();
-            }
-            
+             }
         }
     }
 }

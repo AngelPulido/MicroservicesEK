@@ -14,7 +14,7 @@ namespace EK.Microservices.Command.Infrastructure
         {
             services.AddScoped<IEventProducer, EventProducer>();
             services.AddTransient<IEventStore, EventStore>();
-            services.AddTransient<IEventSourcingHandler<AccountAggregate>, EventSourcingHandler>();
+            services.AddTransient<IEventSourcingHandler<EventAggregate>, EventSourcingHandler>();
 
             return services;
         }

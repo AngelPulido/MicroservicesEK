@@ -5,7 +5,7 @@ using EK.Microservices.Cqrs.Core.Infrastructure;
 
 namespace EK.Microservices.Command.Infrastructure.KafkaEvents
 {
-    public class EventSourcingHandler : IEventSourcingHandler<AccountAggregate>
+    public class EventSourcingHandler : IEventSourcingHandler<EventAggregate>
     {
         private readonly IEventStore _eventStore;
 
@@ -14,7 +14,7 @@ namespace EK.Microservices.Command.Infrastructure.KafkaEvents
             _eventStore = eventStore;
         }
 
-        public Task<AccountAggregate> GetById(string id)
+        public Task<EventAggregate> GetById(string id)
         {
             throw new NotImplementedException();
         }

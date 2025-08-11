@@ -20,6 +20,7 @@ namespace EK.Microservices.Command.Infrastructure.KafkaEvents
 
         public Task SaveEvents(string aggregateId, IEnumerable<BaseEvent> events, int expectedVersion)
         {
+            
             if (expectedVersion != -1)
             {
                 throw new Exception("Errores de concurrencia");
@@ -27,9 +28,8 @@ namespace EK.Microservices.Command.Infrastructure.KafkaEvents
             var version = expectedVersion;
             foreach (var evt in events)
             {
+                
                 version++;
-                evt.Version = version;
-
                 _eventProducer.Produce(evt.GetType().Name, evt);
             }
 

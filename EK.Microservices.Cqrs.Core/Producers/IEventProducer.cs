@@ -4,6 +4,6 @@ namespace EK.Microservices.Cqrs.Core.Producers
 {
     public interface IEventProducer
     {
-        void Produce(string topic, BaseEvent @event);
+        void Produce<T>(string topic, T @event);
     }
 }

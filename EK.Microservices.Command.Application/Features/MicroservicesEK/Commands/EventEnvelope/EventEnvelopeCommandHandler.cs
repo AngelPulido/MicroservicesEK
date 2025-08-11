@@ -2,23 +2,22 @@
 using EK.Microservices.Cqrs.Core.Handlers;
 using MediatR;
 
-namespace EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EmailSent
+namespace EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EventEnvelope
 {
-    public class EmailSentCommandHandler : IRequestHandler<EmailSentCommand, bool>
+    public class EventEnvelopeCommandHandler : IRequestHandler<EventEnvelopeCommand, bool>
     {
         private readonly IEventSourcingHandler<EventAggregate> _eventSourcingHandler;
 
-        public EmailSentCommandHandler(IEventSourcingHandler<EventAggregate> eventSourcingHandler)
+        public EventEnvelopeCommandHandler(IEventSourcingHandler<EventAggregate> eventSourcingHandler)
         {
             _eventSourcingHandler = eventSourcingHandler;
         }
 
-        public async Task<bool> Handle(EmailSentCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(EventEnvelopeCommand request, CancellationToken cancellationToken)
         {
             var agreggate = new EventAggregate(request);
             await _eventSourcingHandler.Save(agreggate);
             return true;
         }
-
     }
 }
