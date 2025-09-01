@@ -48,6 +48,6 @@ namespace EK.Microservices.Command.Infrastructure.KafkaEvents
 
                 producer.ProduceAsync(topic, message).GetAwaiter().GetResult();
              }
-        }
+         }
     }
 }

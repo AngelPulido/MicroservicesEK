@@ -1,4 +1,3 @@
-using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EmailSent;
 using EK.Microservices.Command.Application.Models;
 using EK.Microservices.Command.Infrastructure;
 
@@ -13,7 +12,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("KafkaSettings"));
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<EmailSentCommandHandler>());
+//builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<EmailSentCommandHandler>());
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 

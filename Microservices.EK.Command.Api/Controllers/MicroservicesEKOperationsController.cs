@@ -1,5 +1,4 @@
-﻿using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EmailSent;
-using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EventEnvelope;
+﻿using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EventEnvelope;
 using EK.Microservices.Cqrs.Core.Events;
 using EK.Microservices.Cqrs.Core.Producers;
 using MediatR;
@@ -15,7 +14,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Microservices.EK.Command.Api.Controllers
 {
     [ApiController]
-    public class MicroservicesEKOperationsController : BaseKontrollerOpen
+    public class MicroservicesEKOperationsController : ControllerBase
     {
         private readonly IEventProducer _eventProducer;
         private IMediator _mediator;
@@ -34,60 +33,104 @@ namespace Microservices.EK.Command.Api.Controllers
                 return BadRequest(new { error = "Payload inválido" });
 
             var dto = wrapper.Item;
-            
+
             JObject jsonData = ConvertToJObject(dto.Data);
 
-            var eventEnvelope = MapToEventEnvelope(dto);
-
-            string kafkaTopic = BuildKafkaTopic(dto.Topic);
+            var eventEnvelope = MapToEventEnvelope(dto, jsonData);
 
 
-            string topicName = dto.Topic ?? string.Empty;
-            string[] topicParts = topicName.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            dynamic _retValue = new ExpandoObject();
-
-            try
+            foreach (var topic in dto.Topics ?? Array.Empty<string>())
             {
-                var retValue = "";
-                dynamic resultado = new ExpandoObject();
+                string kafkaTopic = BuildKafkaTopic(topic);
 
-                switch (topicParts[0])
+
+                string[] topicParts = topic.Trim('.')
+                            .Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+                dynamic _retValue = new ExpandoObject();
+
+                try
                 {
-                    case "notificacion":
-                        ProduceEvent(kafkaTopic, eventEnvelope);
-                        resultado = await HandleNotificacion(topicParts[1], jsonData);
-                        retValue = JsonConvert.SerializeObject(resultado);
-                        break;
-                    case "correo":
-                        ProduceEvent(kafkaTopic, eventEnvelope);
-                        break;
-                    case "actualizacion":
-                        ProduceEvent(kafkaTopic, eventEnvelope);
-                        break;
-                    case "sql":
-                        ProduceEvent(kafkaTopic, eventEnvelope);
-                        break;
-                    default:
-                        
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
+                    var retValue = "";
+                    dynamic resultado = new ExpandoObject();
 
-                throw;
+                    switch (topicParts[0])
+                    {
+                        case "notificacion":
+                            resultado = await HandleNotificacion(topicParts[1], jsonData, kafkaTopic, eventEnvelope);
+                            retValue = JsonConvert.SerializeObject(resultado);
+                            break;
+                        case "EnvioCorreos":
+                            resultado = await HandleEnvioCorreos(topicParts[1], jsonData, kafkaTopic, eventEnvelope);
+                            retValue = JsonConvert.SerializeObject(resultado);
+                            break;
+                        case "actualizacion":
+                            ProduceEvent(kafkaTopic, eventEnvelope);
+                            resultado = await HandleActualizacion(topicParts[1], jsonData, kafkaTopic, eventEnvelope);
+                            retValue = JsonConvert.SerializeObject(resultado);
+                            break;
+                        case "sql":
+                            ProduceEvent(kafkaTopic, eventEnvelope);
+                            resultado = await HandleSql(topicParts[1], jsonData, kafkaTopic, eventEnvelope);
+                            retValue = JsonConvert.SerializeObject(resultado);
+                            break;
+                        default:
+                            dynamic _obj = new ExpandoObject();
+
+                            _retValue.code = 500;
+                            _retValue.message = "Error";
+                            _retValue.data = _obj;
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    throw;
+                }
+               
             }
-            return Ok();
+            return Ok(new
+            {
+                code = 200,
+                message = "Topics procesados correctamente",
+                wrapper
+            });
+            }
+
+        private async Task<dynamic> HandleSql(string comando, JObject json_datos, string kafkaTopic, object eventEnvelope)
+        {
+            throw new NotImplementedException();
         }
 
-        private async Task<ExpandoObject> HandleNotificacion(string comando, JObject json_datos)
+        private async Task<dynamic> HandleActualizacion(string comando, JObject json_datos, string kafkaTopic, object eventEnvelope)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task<dynamic> HandleEnvioCorreos(string comando, JObject json_datos, string kafkaTopic, object eventEnvelope)
+        {
+            dynamic resultado = new ExpandoObject();
+
+            switch (comando)
+            {
+                case "OrdenesDeCompra":
+                    ProduceEvent(kafkaTopic, eventEnvelope);
+                    break;
+                default:
+                    break;
+            }
+            return resultado;
+        }
+
+        private async Task<ExpandoObject> HandleNotificacion(string comando, JObject json_datos, string kafkaTopic, object eventEnvelope)
         {
             dynamic resultado = new ExpandoObject();
 
             switch(comando)
             {
                 case "autorizacion":
+                    ProduceEvent(kafkaTopic, eventEnvelope);
                     break;
                 default:
                     break;
@@ -107,13 +150,13 @@ namespace Microservices.EK.Command.Api.Controllers
             return (topic ?? string.Empty).Trim('/').Replace("/", ".");
         }
 
-        private object MapToEventEnvelope(EventEnvelopeCommand dto)
+        private object MapToEventEnvelope(EventEnvelopeCommand dto, JObject jsonData)
         {
             return new EventEnvelope(
-                id: string.IsNullOrEmpty(dto.Id) ? Guid.NewGuid().ToString() : dto.Id,
-                topic: dto.Topic,
+                id: Guid.NewGuid().ToString(),
+                topics: dto.Topics,
                 timestamp: dto.Timestamp == default ? DateTime.UtcNow : dto.Timestamp,
-                data: dto.Data
+                data: jsonData
             );
         }
 

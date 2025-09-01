@@ -9,7 +9,7 @@ namespace EK.Microservices.Command.Application.Features.MicroservicesEK.Commands
         public string Id { get; set; } = string.Empty;
         //public string EventType { get; set; } = string.Empty;
         //public string Compania { get; set; } = string.Empty;
-        public string Topic { get; set; } = string.Empty;
+        public string[] Topics { get; set; } = Array.Empty<string>();
         //public string EntityName { get; set; } = string.Empty;
         //public string User { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }

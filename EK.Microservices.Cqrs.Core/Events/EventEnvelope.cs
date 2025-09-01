@@ -13,7 +13,7 @@ namespace EK.Microservices.Cqrs.Core.Events
         //public string EventType { get; set; } = string.Empty;
         //public string Compania { get; set; } = string.Empty;
         [JsonIgnore]
-        public string Topic { get; set; } = string.Empty;
+        public string[] Topics { get; set; } = Array.Empty<string>();
         //public string EntityName { get; set; } = string.Empty;
         //public string User { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
@@ -23,7 +23,7 @@ namespace EK.Microservices.Cqrs.Core.Events
             string id,
             //string eventType, 
             //string compania,
-            string topic,
+            string[] topics,
             //string entityName, 
             //string user, 
             DateTime timestamp,
@@ -33,7 +33,7 @@ namespace EK.Microservices.Cqrs.Core.Events
             Id = id;
             //EventType = eventType;
             //Compania = compania;
-            Topic = topic;
+            Topics = topics;
             //EntityName = entityName;
             //User = user;
             Timestamp = timestamp;

@@ -1,5 +1,4 @@
-﻿using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EmailSent;
-using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EventEnvelope;
+﻿using EK.Microservices.Command.Application.Features.MicroservicesEK.Commands.EventEnvelope;
 using EK.Microservices.Cqrs.Core.Domain;
 using EK.Microservices.Cqrs.Core.Events;
 
@@ -11,20 +10,6 @@ namespace EK.Microservices.Command.Application.Aggregates
         {
         }
 
-        public EventAggregate(EmailSentCommand command)
-        {
-            var emailSent = new EmailSent(
-                command.Id,
-                command.To,
-                //command.FromEmail,
-                //command.DisplayName,
-                command.Subject,
-                command.Body,
-                command.NameFile,
-                command.Base64Content);
-
-            RaiseEvent(emailSent);
-        }
         public EventAggregate(EventEnvelopeCommand command)
         {
             var timestamp = command.Timestamp == default ? DateTime.UtcNow : command.Timestamp;
@@ -34,7 +19,7 @@ namespace EK.Microservices.Command.Application.Aggregates
                 id,
                 //command.EventType,
                 //command.Compania,
-                command.Topic,
+                command.Topics,
                 //command.EntityName,
                 //command.User,
                 timestamp,
@@ -43,10 +28,6 @@ namespace EK.Microservices.Command.Application.Aggregates
             RaiseEvent(envelopeEvent);
         }
 
-        public void Apply(EmailSent @event)
-        {
-            Id = @event.Id;
-        }
         public void Apply(EventEnvelope @event)
         {
             Id = @event.Id;
